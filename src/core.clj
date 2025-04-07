@@ -9,7 +9,7 @@
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
-(def token    (slurp "./DISCORD_KEY_DO_NOT_PUSH"))
+(def token    (slurp "~/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
 (def intents #{:guilds :guild-messages})
 
 (defn levenshtein [{w1 :sname} w2]
@@ -69,7 +69,7 @@
           (persecution?)   (r/measured-hacknet-response start n)
           (duck?)          r/duk
           (naughty?)       r/tell-off
-          (some? match)    (str name " - " "<" (match :url) ">" (r/sig start n))
+          (some? match)    (str (match :name) " - " "<" (match :url) ">" (r/sig start n))
           :else            (str (bad_request spoil-ok? request) (r/sig start n)))]
 
     (m/create-message! message-ch channel-id :content reply)))

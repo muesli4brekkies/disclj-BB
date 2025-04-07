@@ -4,7 +4,7 @@
    [clj-time       [core :as t]]
    [clojure.string :as s]))
 
-(def md-dir "markdown/")
+(def md-dir "/home/debbyadmin/serverfiles/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/dev/markdown/bitburner.")
 
