@@ -1,7 +1,10 @@
 (ns core
+  (:gen-class)
   (:require
-   [replies :as r]
-   [clojure.string :as s]
+   [replies               :as r]
+   [spoiler-channels      :as i]
+   [clj-time       [core :as t]]
+   [clojure.string        :as s]
    [clojure.core.async    :as a]
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
@@ -9,64 +12,84 @@
 (def token    (slurp "./DISCORD_KEY_DO_NOT_PUSH"))
 (def intents #{:guilds :guild-messages})
 
-(defn- count_similar [reply [acc last] c] (let [n (if (s/includes? reply (str c)) 1 -2)] [(+ acc n last) n]))
+(defn levenshtein [{w1 :sname} w2]
+  (letfn [(cell-value [same-char? prev-row cur-row col-idx]
+            (min (inc (nth prev-row col-idx))
+                 (inc (last cur-row))
+                 (+ (nth prev-row (dec col-idx)) (if same-char? 0 1))))]
+    (loop [row-idx  1
+           max-rows (inc (count w2))
+           prev-row (range (inc (count w1)))]
+      (if (= row-idx max-rows)
+        (last prev-row)
+        (let [ch2           (nth w2 (dec row-idx))
+              next-prev-row (reduce
+                             (fn [cur-row i] (conj cur-row (cell-value (= (nth w1 (dec i)) ch2) prev-row cur-row i)))
+                             [row-idx]
+                             (range 1 (count prev-row)))]
+          (recur (inc row-idx) max-rows next-prev-row))))))
 
-(defn- score [request {spoil? :spoil? str :str} spoil-ok?]
-  (if (and (not spoil-ok?) spoil?)
-    (* -1 ##Inf)
-    (first (reduce (partial count_similar str) [0 0] (seq request)))))
+(defn- bad_request [spoil-ok? request]
+  (->> [(str "\"" request "\" not found")
+        "The machine spirit wonders if you meant..."
+        (->> r/replies
+             vals
+             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (levenshtein % request))))
+             (sort-by #(get % :score ##Inf))
+             (take 5)
+             (map #(str "- " (% :name) ": <" (% :url) ">")))
+        "...? Bye!"]
+       flatten
+       (s/join "\n")))
 
-(defn by-score [request spoil-ok?]
-  (fn [ra rb] (let [ca (score request rb spoil-ok?)
-                    cb (score request ra spoil-ok?)]
-                (compare ca cb))))
+(defn- hacknet-persecution-detector [content]
+  (or
+   (seq (re-matches #".*(do( not|n'?t|nut|ughnut) buy hacknet).*" content))
+   (seq (re-matches #".*(hacknet (is( not|n'?t) worth it|sucks|is a bad investment)).*" content))))
 
-(defn- str-cands [options spoil-ok?]
-  (map (fn [{spoil? :spoil? option :str}]
-         (str "- "
-              (when (and spoil?  spoil-ok?) "||")
-              option ": <" (:url (r/replies (keyword (s/lower-case option)))) ">"
-              (when (and spoil?  spoil-ok?) "||")
-              "\n"))
-       options))
+(defn- crunch-msg [event-data message-ch n]
+  (let [start              (t/now)
+        content            (-> event-data :content)
+        channel-id         (-> event-data :channel-id)
+        spoil-ok?          (some (fn [c] (= c channel-id)) i/spoiler-channels)
+        request            (-> content (s/replace #"<@\d+>( |)" "") (s/replace #"(?i)^!NS\b" "") r/lcase-&-rm-ns)
+        match              ((keyword request) r/replies)
 
-(defn- bad_request [request spoil-ok?]
-  (let [sorted (sort
-                (by-score request spoil-ok?)
-                (vals r/replies))
-        candidates (take 5 sorted)]
-    (str
-     "\"" request "\""
-     " not found \n\nThe machine spirit wonders if you meant...\n"
-     (apply str (str-cands candidates spoil-ok?)) "?\n"
-     "Bye!")))
+        robot?             #(or (= request "bleep bloop") (= request "bloop bleep"))
+        too-long?          #(< 65 (count request))
+        persecution?       #(hacknet-persecution-detector request)
+        naughty?           #(some (fn [r] (s/includes? request r)) r/spoilers)
+        duck?              #(or (s/includes? request "quack") (s/includes? request "duck"))
 
-(let [event-ch      (a/chan 100)
-      _connection-ch (c/connect-bot! token event-ch :intents intents)
-      message-ch    (m/start-connection! token)]
-  (try
-    (loop []
-      (let [[event-type event-data] (a/<!! event-ch)
-            msg? (= :message-create event-type)
-            {{bot? :bot} :author} event-data]
-        (when (and msg? (not bot?))
-          (let [{content :content channel-id :channel-id} event-data]
-            (when  (s/starts-with?  (s/trim content) "!NS ")
-              (let [spoil-ok? (or (s/ends-with? content " -s") (s/includes? content " -s "))
-                    request (s/lower-case (s/replace (s/replace content #"\W-s\W?" "") #"!NS " ""))
-                    {spoil? :spoil? url :url} ((keyword request) r/replies)]
-                (->>
-                 (str
-                  "I am summoned from mine digital slumber once more \n\n"
-                  (cond
-                    (s/includes? content "duck") "quack 🦆"
-                    (= request "bleep bloop") "bloop bleep"
-                    (= request "bloop bleep") "bleep bloop"
-                    (and (not spoil-ok?) spoil?) "Doesn't look like anything to me."
-                    (nil? url) (bad_request request spoil-ok?)
-                    :else (str (when spoil? "||") "<" url ">" (when spoil? "||"))))
-                 (m/create-message! message-ch channel-id :content))))))
-        (recur)))
-    (finally
-      (m/stop-connection! message-ch)
-      (a/close!           event-ch))))
+        reply
+        (cond
+          (empty? request) (str "NS - " "<" (-> r/replies :ns :url) ">" (r/sig start n))
+          (too-long?)      "nuh uh, that request is too long."
+          (robot?)         (s/join " " (-> request (s/split #"\s") reverse))
+          (persecution?)   (r/measured-hacknet-response start n)
+          (duck?)          r/duk
+          (naughty?)       r/tell-off
+          (some? match)    (str name " - " "<" (match :url) ">" (r/sig start n))
+          :else            (str (bad_request spoil-ok? request) (r/sig start n)))]
+
+    (m/create-message! message-ch channel-id :content reply)))
+
+(defn -main []
+  (letfn [(at?  [data] (some #(= (% :username) "ns.pest()") (get data :mentions)))
+          (!ns? [data] (re-find #"(?i)^!NS\b" (get data :content "")))]
+    (let [event-ch     (a/chan 100)
+          _conn_ch     (c/connect-bot! token event-ch :intents intents)
+          message-ch   (m/start-connection! token)]
+      (try
+        (loop [n 0]
+          (recur
+           (let [[type data] (a/<!! event-ch)
+                 msg?        (= :message-create type)
+                 notbot?     (-> data :author :bot not)
+                 for-me?     (or (at? data) (!ns? data))
+                 ok?         (and msg? notbot? for-me?)]
+             (if ok? (do (crunch-msg data message-ch n) (inc n)) n))))
+        (finally
+          (m/stop-connection! message-ch)
+          (a/close!           event-ch))))))
+

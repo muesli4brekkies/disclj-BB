@@ -6,6 +6,8 @@
   :dependencies [
   [org.clojure/clojure "1.11.1"]
   [com.github.discljord/discljord "1.3.1"]
+[clj-time "0.15.2"]
+
   ]
   :main ^:skip-aot core
   :target-path "target/%s"
