@@ -6,7 +6,7 @@
 
 (def md-dir "/home/debbyadmin/serverfiles/markdown/")
 
-(def baseurl "https://github.com/bitburner-official/bitburner-src/blob/dev/markdown/bitburner.")
+(def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
 
 (defn sig [start n] (str "\n-# \\#" n " ~" (t/in-millis (t/interval start (t/now))) "ms, @mushroom.botherer if I misbehave."))
 

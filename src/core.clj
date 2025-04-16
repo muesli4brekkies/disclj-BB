@@ -9,7 +9,7 @@
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
-(def token    (slurp "~/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
+(def token (slurp "home/debbyadmin/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
 (def intents #{:guilds :guild-messages})
 
 (defn levenshtein [{w1 :sname} w2]
@@ -47,18 +47,19 @@
    (seq (re-matches #".*(do( not|n'?t|nut|ughnut) buy hacknet).*" content))
    (seq (re-matches #".*(hacknet (is( not|n'?t) worth it|sucks|is a bad investment)).*" content))))
 
+
 (defn- crunch-msg [event-data message-ch n]
   (let [start              (t/now)
         content            (-> event-data :content)
         channel-id         (-> event-data :channel-id)
-        spoil-ok?          (some (fn [c] (= c channel-id)) i/spoiler-channels)
+        spoil-ok?          (some #(= % channel-id) i/spoiler-channels)
         request            (-> content (s/replace #"<@\d+>( |)" "") (s/replace #"(?i)^!NS\b" "") r/lcase-&-rm-ns)
         match              ((keyword request) r/replies)
 
         robot?             #(or (= request "bleep bloop") (= request "bloop bleep"))
         too-long?          #(< 65 (count request))
         persecution?       #(hacknet-persecution-detector request)
-        naughty?           #(some (fn [r] (s/includes? request r)) r/spoilers)
+        naughty?           #(and (not spoil-ok?) (some (fn [r] (s/includes? request r)) r/spoilers))
         duck?              #(or (s/includes? request "quack") (s/includes? request "duck"))
 
         reply
