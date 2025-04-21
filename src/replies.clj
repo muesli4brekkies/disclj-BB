@@ -3,10 +3,10 @@
    [clojure.java.io :as io]
    [clj-time       [core :as t]]
    [clojure.string :as s]))
-
-(def md-dir "/home/debbyadmin/serverfiles/markdown/")
+(def md-dir "./markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
+(def mdn-url "https://developer.mozilla.org")
 
 (defn sig [start n] (str "\n-# \\#" n " ~" (t/in-millis (t/interval start (t/now))) "ms, @mushroom.botherer if I misbehave."))
 
@@ -48,8 +48,7 @@
 
 (defn lcase-&-rm-ns [r] (s/lower-case (-> r (s/replace #"\(\)" "") (s/replace #"(?i)^ns\." "") s/trim)))
 
-
-(def replies
+(def ns-replies
   (reduce
    (fn [replies name]
      (assoc
@@ -71,3 +70,15 @@
        (s/split #" ")
        second
        (s/replace #"\\" ""))))))
+
+(def mdn-replies
+  (->>
+   "./mdn-ref.properties"
+   slurp
+   s/split-lines
+   (map (fn [line] (s/split line #"=")))
+   (reduce (fn [prev [name url]] (assoc prev (keyword name) {:name name :sname name :spoiler false :url url})) {})))
+
+(def replies
+  {:ns ns-replies
+   :mdn (assoc mdn-replies :mdn {:url mdn-url})})
