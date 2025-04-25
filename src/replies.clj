@@ -73,12 +73,19 @@
 
 (def mdn-replies
   (->>
-   "./mdn-ref.properties"
+   "/home/muesli/serverfiles/mdn-ref.properties"
    slurp
    s/split-lines
    (map (fn [line] (s/split line #"=")))
-   (reduce (fn [prev [name url]] (assoc prev (keyword name) {:name name :sname name :spoiler false :url url})) {})))
+   (reduce
+    (fn [prev [name url]]
+      (assoc prev (keyword name)
+             {:name name
+              :sname name
+              :spoiler false
+              :url url}))
+    {:mdn {:url mdn-url}})))
 
 (def replies
   {:ns ns-replies
-   :mdn (assoc mdn-replies :mdn {:url mdn-url})})
+   :mdn mdn-replies})

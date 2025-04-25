@@ -1,8 +1,9 @@
-(ns cjrt  (:require
-                 [clojure.java.io :as io]
-                 [clojure.string :as s])
-    (:import
-     [java.util.zip ZipInputStream]))
+(ns create-js-reference-table
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as s])
+  (:import
+   [java.util.zip ZipInputStream]))
 
 ;; (def mdn-repository "./mdn.zip")
 (def mdn-repository "https://codeload.github.com/mdn/content/zip/refs/heads/main")
