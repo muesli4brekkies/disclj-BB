@@ -9,7 +9,7 @@
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
-(def token (slurp "/home/muesli/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
+(def token (slurp "/home/debbyadmin/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
 (def intents #{:guilds :guild-messages})
 
 (defn levenshtein [{w1 :sname} w2]
@@ -50,8 +50,8 @@
 (defn- crunch-msg [event-data message-ch n]
   (let [start              (t/now)
         content            (-> event-data :content)
-        channel-id         1357304376330289233 ;(-> event-data :channel-id)
-        type               (if (re-matches #"(?i)^!ns" content) :ns :mdn)
+        channel-id         (-> event-data :channel-id)
+        type               (if (re-matches #"(?i)^!ns.*" content) :ns :mdn)
         replies            (r/replies type)
         spoil-ok?          (and (not (= type :mdn)) (some #(= % channel-id) i/spoiler-channels))
         request            (-> content (s/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
