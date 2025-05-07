@@ -3,7 +3,7 @@
    [clojure.java.io :as io]
    [clj-time       [core :as t]]
    [clojure.string :as s]))
-(def md-dir "/home/debbyadmin/serverfiles/markdown/")
+(def md-dir "./data/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
 (def mdn-url "https://developer.mozilla.org")
@@ -73,7 +73,7 @@
 
 (def mdn-replies
   (->>
-   "/home/debbyadmin/serverfiles/mdn-ref.properties"
+   "./data/mdn-ref.properties"
    slurp
    s/split-lines
    (map (fn [line] (s/split line #"=")))

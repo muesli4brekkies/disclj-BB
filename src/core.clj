@@ -9,7 +9,7 @@
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
-(def token (slurp "/home/debbyadmin/serverfiles/DISCORD_KEY_DO_NOT_PUSH"))
+(def token (slurp "./data/discord_bot.key"))
 (def intents #{:guilds :guild-messages})
 
 (defn levenshtein [{w1 :sname} w2]
@@ -98,4 +98,3 @@
         (finally
           (m/stop-connection! message-ch)
           (a/close!           event-ch))))))
-
