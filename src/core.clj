@@ -2,17 +2,23 @@
   (:gen-class)
   (:require
    [replies               :as r]
+   [routes :as routes]
    [spoiler-channels      :as i]
-   [clj-time       [core :as t]]
-   [clojure.string        :as s]
-   [clojure.core.async    :as a]
+   [clj-time       [core :as time]]
+   [clojure.string        :as string]
+   [clojure.core.async    :as async]
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
-(def token (slurp "./data/discord_bot.key"))
+(def token
+  "Discord bot token, used as ID and 'security measure' in one. Use your own!"
+  (slurp "./data/discord_bot.key"))
+
 (def intents #{:guilds :guild-messages})
 
-(defn levenshtein [{w1 :sname} w2]
+(defn levenshtein
+  "Fuzzy matcher based on levenshtein algorithm."
+  [{w1 :sname} w2]
   (letfn [(cell-value [same-char? prev-row cur-row col-idx]
             (min (inc (nth prev-row col-idx))
                  (inc (last cur-row))
@@ -29,7 +35,9 @@
                              (range 1 (count prev-row)))]
           (recur (inc row-idx) max-rows next-prev-row))))))
 
-(defn- bad_request [spoil-ok? request replies]
+(defn- bad_request
+  "Returns a message trying to fuzzy match the input."
+  [spoil-ok? request replies]
   (->> [(str "\"" request "\" not found")
         "The machine spirit wonders if you meant..."
         (->> replies
@@ -40,61 +48,54 @@
              (map #(str "- " (% :name) ": <" (% :url) ">")))
         "...? Bye!"]
        flatten
-       (s/join "\n")))
+       (string/join "\n")))
 
-(defn- hacknet-persecution-detector [content]
-  (or
-   (seq (re-matches #".*(do( not|n'?t|nut|ughnut) buy hacknet).*" content))
-   (seq (re-matches #".*(hacknet (is( not|n'?t) worth it|sucks|is a bad investment)).*" content))))
+(defn route-msg
+  [routes msg event]
+  (let [route (var-get (first routes))]
+    (prn route)
+    (if (= 0 (count routes)) (prn "No match!"))
+    (if ((:condition route) msg event)
+      ((:result route) msg event)
+      (recur (rest routes) msg event))))
 
-(defn- crunch-msg [event-data message-ch n]
-  (let [start              (t/now)
-        content            (-> event-data :content)
-        channel-id         (-> event-data :channel-id)
-        type               (if (re-matches #"(?i)^!ns.*" content) :ns :mdn)
-        replies            (r/replies type)
-        spoil-ok?          (and (not (= type :mdn)) (some #(= % channel-id) i/spoiler-channels))
-        request            (-> content (s/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
-        match              ((keyword request) replies)
+(def auto-router
+  "Automatically hooks up any route in the `routes` namespace to the router"
+  (partial route-msg
+           (vals (ns-publics 'routes))))
 
-        robot?             #(or (= request "bleep bloop") (= request "bloop bleep"))
-        poastcoad?         #(= request "poast coad")
-        pspsps?            #(re-find #"^ps(ps)+" request)
-        too-long?          #(< 65 (count request))
-        persecution?       #(hacknet-persecution-detector request)
-        naughty?           #(and (not spoil-ok?) (some (fn [r] (s/includes? request r)) r/spoilers))
-        duck?              #(or (s/includes? request "quack") (s/includes? request "duck"))
 
-        reply
-        (cond
-          (empty? request) (str (if (= type :ns) "NS" "MDN") " - " "<" (-> replies type :url) ">" (r/sig start n))
-          (too-long?)      "nuh uh, that request is too long."
-          (poastcoad?)     "https://cdn.discordapp.com/attachments/1287394172894052507/1357485911885222060/image.png"
-          (pspsps?)        "https://cdn.discordapp.com/attachments/1287394172894052507/1365428275496882224/image.png"
-          (robot?)         (s/join " " (-> request (s/split #"\s") reverse))
-          (persecution?)   (r/measured-hacknet-response start n)
-          (duck?)          r/duk
-          (naughty?)       r/tell-off
-          (some? match)    (str (match :name) " - " "<" (match :url) ">" (r/sig start n))
-          :else            (str (bad_request spoil-ok? request replies) (r/sig start n)))]
-    (m/create-message! message-ch channel-id :content reply)))
+(defn- event-enricher
+  "Turns an event into a map with all relevant data."
+  [event message-ch n]
+  ;; Ensure bogus requests are ignored early.
+  (if (< 70 (count (:content event))) "Nuh uh, that request is too long.")
 
-(defn -main []
+  (let [msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
+        ;; Pass the event to the router
+        reply (auto-router msg event)]
+    (m/create-message! message-ch (:channel-id event) :content reply)))
+
+(defn -main
+  "Start the server.
+   Note to Zoë and other REPLers, use: `(doto (Thread. -main) (.setDaemon true) (.start))`."
+  []
   (letfn [(check-prefix [data] (re-find #"(?i)^!(MDN|NS)\b" (get data :content "")))
           ]
-    (let [event-ch     (a/chan 100)
+    (let [event-ch     (async/chan 100)
           _conn_ch     (c/connect-bot! token event-ch :intents intents)
           message-ch   (m/start-connection! token)]
       (try
         (loop [n 0]
           (recur
-           (let [[type data] (a/<!! event-ch)
+           (let [[type data] (async/<!! event-ch)
                  msg?        (= :message-create type)
                  notbot?     (-> data :author :bot not)
                  for-me?     (check-prefix data)
                  ok?         (and msg? notbot? for-me?)]
-             (if ok? (do (crunch-msg data message-ch n) (inc n)) n))))
+             (prn data)
+             (if ok? (do (event-enricher data message-ch n) (inc n)) n))))
 
         (finally
           (m/stop-connection! message-ch)
-          (a/close!           event-ch))))))
+          (async/close!           event-ch))))))

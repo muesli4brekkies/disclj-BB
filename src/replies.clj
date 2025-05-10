@@ -2,7 +2,8 @@
   (:require
    [clojure.java.io :as io]
    [clj-time       [core :as t]]
-   [clojure.string :as s]))
+   [clojure.string :as s]
+   [spoiler-channels      :as i]))
 (def md-dir "./data/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
@@ -17,10 +18,6 @@
    "whereby you are legally compelled to immediately share this information with everyone within 100 metres "
    "under penalty of imprisonment or fine. "
    "Click [here](<https://www.youtube.com/watch?v=fC7oUOUEEi4>) for more information."))
-(defn measured-hacknet-response [start n]
-  (str
-   "Hacknet a bad investment early game? You serious? Have you done your mathematics with that thing or not? I guess not. I'm from a heavily mathematical and scientific and scholastic family and lineage since like, Ancient China 5000 years ago? I was forced to do math drills before I could even play anything or whatever. I even had to compete in speed and accuracy with my childhood friend. Of course I won by a mile. Look, calculate the multiplicative aspects of the Hacknets. They'll earn way more than any early servers you can hack because the early game server are so darn poor. hack() is a percentage thingy as far as I can gather. Low server max money, low script income. It doesn't get any simpler to figure out than that. Before you insult my \"mental bandwidth\", I'll have you know that I have full score for all IQ tests I take anytime, anywhere, including those ever increasing difficulty ones that keep going until seemingly forever, and those were so easy and repetitive that I eventually got bored after I passed 300+IQ score and quit out of boredom, even though I originally was aiming for 1000+IQ score. I've always gotten 100% for my Mathematics from kindergarten till end of college/uni and so same programming subjects and logic and abstraction subject. Anyway, enough about me. Just wanted you to know not to judge other people without first getting to know them. It's rude."
-   (big-sig start n)))
 
 (def duk "quack 🦆")
 
@@ -89,3 +86,7 @@
 (def replies
   {:ns ns-replies
    :mdn mdn-replies})
+
+(defn spoil-ok?
+  [event]
+  (and (not (= (:type event) :mdn)) (some #(= % (:channel-id event)) i/spoiler-channels)))
