@@ -26,7 +26,6 @@
       ((:result route) msg event)
       (recur (rest routes) msg event))))
 
-
 (def router
   "Message router, partially applied with all routes."
   (partial route-msg

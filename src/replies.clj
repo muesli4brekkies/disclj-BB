@@ -3,7 +3,8 @@
    [clojure.java.io :as io]
    [clj-time       [core :as time]]
    [clojure.string :as string]
-   [spoiler-channels      :as i]))
+   [spoiler-channels      :as i]
+   [clj-fuzzy.metrics :as fuzzy]))
 (def md-dir "./data/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
@@ -90,26 +91,6 @@
               :url url}))
     {:mdn {:url mdn-url}})))
 
-(defn levenshtein
-  "Fuzzy matcher based on levenshtein algorithm."
-  [{w1 :sname} w2]
-  (letfn [(cell-value [same-char? prev-row cur-row col-idx]
-            (min (inc (nth prev-row col-idx))
-                 (inc (last cur-row))
-                 (+ (nth prev-row (dec col-idx)) (if same-char? 0 1))))]
-    (loop [row-idx  1
-           max-rows (inc (count w2))
-           prev-row (range (inc (count w1)))]
-      (if (= row-idx max-rows)
-        (last prev-row)
-        (let [ch2           (nth w2 (dec row-idx))
-              next-prev-row (reduce
-                             (fn [cur-row i] (conj cur-row (cell-value (= (nth w1 (dec i)) ch2) prev-row cur-row i)))
-                             [row-idx]
-                             (range 1 (count prev-row)))]
-          (recur (inc row-idx) max-rows next-prev-row))))))
-
-
 (defn fuzzy-search
   "Returns a message trying to fuzzy match the input."
   [spoil-ok? request replies]
@@ -117,8 +98,9 @@
         "The machine spirit wonders if you meant..."
         (->> replies
              vals
-             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (levenshtein % request))))
+             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (fuzzy/dice % request))))
              (sort-by #(get % :score ##Inf))
+             reverse
              (take 5)
              (map #(str "- " (% :name) ": <" (% :url) ">")))
         "...? Bye!"]
