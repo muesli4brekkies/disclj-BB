@@ -30,7 +30,10 @@
   "Message router, partially applied with all routes."
   (partial route-msg
            ;; Order matters here, as the router will go through this front to back.
-           [routes/robot
+           [routes/empty-mdn
+            routes/empty-ns
+            routes/too-long
+            routes/robot
             routes/poast-coad
             routes/pspsps
             routes/zoe
@@ -44,7 +47,7 @@
   "Turns an event into a map with all relevant data."
   [event message-ch n]
   ;; Ensure bogus requests are ignored early.
-  (if (< 70 (count (:content event))) "Nuh uh, that request is too long.")
+  (when (< 70 (count (:content event))))
 
   (let [msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
         ;; Pass the event to the router
