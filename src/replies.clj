@@ -2,7 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [clj-time       [core :as t]]
-   [clojure.string :as s]
+   [clojure.string :as string]
    [spoiler-channels      :as i]))
 (def md-dir "./data/markdown/")
 
@@ -18,8 +18,6 @@
    "whereby you are legally compelled to immediately share this information with everyone within 100 metres "
    "under penalty of imprisonment or fine. "
    "Click [here](<https://www.youtube.com/watch?v=fC7oUOUEEi4>) for more information."))
-
-(def duk "quack 🦆")
 
 (def tell-off "Doesn't look like anything to me. That's probably a spoiler on this channel. --> <#415207923506216971>")
 
@@ -83,9 +81,40 @@
               :url url}))
     {:mdn {:url mdn-url}})))
 
-(def replies
-  {:ns ns-replies
-   :mdn mdn-replies})
+(defn levenshtein
+  "Fuzzy matcher based on levenshtein algorithm."
+  [{w1 :sname} w2]
+  (letfn [(cell-value [same-char? prev-row cur-row col-idx]
+            (min (inc (nth prev-row col-idx))
+                 (inc (last cur-row))
+                 (+ (nth prev-row (dec col-idx)) (if same-char? 0 1))))]
+    (loop [row-idx  1
+           max-rows (inc (count w2))
+           prev-row (range (inc (count w1)))]
+      (if (= row-idx max-rows)
+        (last prev-row)
+        (let [ch2           (nth w2 (dec row-idx))
+              next-prev-row (reduce
+                             (fn [cur-row i] (conj cur-row (cell-value (= (nth w1 (dec i)) ch2) prev-row cur-row i)))
+                             [row-idx]
+                             (range 1 (count prev-row)))]
+          (recur (inc row-idx) max-rows next-prev-row))))))
+
+
+(defn fuzzy-search
+  "Returns a message trying to fuzzy match the input."
+  [spoil-ok? request replies]
+  (->> [(str "\"" request "\" not found")
+        "The machine spirit wonders if you meant..."
+        (->> replies
+             vals
+             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (levenshtein % request))))
+             (sort-by #(get % :score ##Inf))
+             (take 5)
+             (map #(str "- " (% :name) ": <" (% :url) ">")))
+        "...? Bye!"]
+       flatten
+       (string/join "\n")))
 
 (defn spoil-ok?
   [event]

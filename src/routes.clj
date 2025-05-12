@@ -22,6 +22,10 @@
   {:condition (fn [msg _] (re-find #"^ps(ps)+" msg))
    :result (fn [msg _] "https://cdn.discordapp.com/attachments/1287394172894052507/1365428275496882224/image.png")})
 
+(def zoe
+  {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
+   :result (fn [msg _] "https://media.discordapp.net/attachments/1369725817038442620/1371201395813781645/image.png")})
+
 (def persecution
   {:condition (fn [msg _]
                 (or
@@ -31,18 +35,17 @@
 
 (def duck
   {:condition (fn [msg _] (or (s/includes? msg "quack") (s/includes? msg "duck")))
-   :result (fn [msg _] r/duk)})
-
+   :result (fn [msg _] "quack 🦆")})
 
 (def naughty
   {:condition (fn [msg event]
                 (and (not (r/spoil-ok? event)) (some (fn [r] (s/includes? msg r)) r/spoilers)))
    :result (fn [msg _] r/tell-off)})
 
-(def mdn-lookup
+(def lookup-mdn
   {:condition (fn [_ event] (re-matches #"(?i)^!mdn.*" (:content event)))
-   :result (fn [msg _] "mdn placeholder")})
+   :result (fn [msg event] (r/fuzzy-search false msg r/mdn-replies))})
 
-(def ns-lookup
+(def lookup-ns
   {:condition (fn [_ event] (re-matches #"(?i)^!ns.*" (:content event)))
-   :result (fn [msg _] "ns placeholder")})
+   :result (fn [msg _] (r/fuzzy-search false msg r/ns-replies))})

@@ -16,53 +16,37 @@
 
 (def intents #{:guilds :guild-messages})
 
-(defn levenshtein
-  "Fuzzy matcher based on levenshtein algorithm."
-  [{w1 :sname} w2]
-  (letfn [(cell-value [same-char? prev-row cur-row col-idx]
-            (min (inc (nth prev-row col-idx))
-                 (inc (last cur-row))
-                 (+ (nth prev-row (dec col-idx)) (if same-char? 0 1))))]
-    (loop [row-idx  1
-           max-rows (inc (count w2))
-           prev-row (range (inc (count w1)))]
-      (if (= row-idx max-rows)
-        (last prev-row)
-        (let [ch2           (nth w2 (dec row-idx))
-              next-prev-row (reduce
-                             (fn [cur-row i] (conj cur-row (cell-value (= (nth w1 (dec i)) ch2) prev-row cur-row i)))
-                             [row-idx]
-                             (range 1 (count prev-row)))]
-          (recur (inc row-idx) max-rows next-prev-row))))))
-
-(defn- bad_request
-  "Returns a message trying to fuzzy match the input."
-  [spoil-ok? request replies]
-  (->> [(str "\"" request "\" not found")
-        "The machine spirit wonders if you meant..."
-        (->> replies
-             vals
-             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (levenshtein % request))))
-             (sort-by #(get % :score ##Inf))
-             (take 5)
-             (map #(str "- " (% :name) ": <" (% :url) ">")))
-        "...? Bye!"]
-       flatten
-       (string/join "\n")))
-
 (defn route-msg
+  "Decides on what output message to generate based on the routes (condition->result) and the input message.
+  Routes will be handled from front to back."
   [routes msg event]
-  (let [route (var-get (first routes))]
-    (prn route)
-    (if (= 0 (count routes)) (prn "No match!"))
+  (let [route (first routes)]
+    (when (= 0 (count routes)) (prn "No match!"))
     (if ((:condition route) msg event)
       ((:result route) msg event)
       (recur (rest routes) msg event))))
 
-(def auto-router
-  "Automatically hooks up any route in the `routes` namespace to the router"
+(defn signature-decorator
+  "Wraps a message router with a) how long it took to generate the message b) Muesli's signature"
+  [route msg event]
+  (let [start-time (time/now)
+        result (route)
+        end-time (time/now)])
+  )
+
+(def router
+  "Message router, partially applied with all routes."
   (partial route-msg
-           (vals (ns-publics 'routes))))
+           ;; Order matters here, as the router will go through this front to back.
+           [routes/robot
+            routes/poast-coad
+            routes/pspsps
+            routes/zoe
+            routes/persecution
+            routes/duck
+            routes/naughty
+            routes/lookup-mdn
+            routes/lookup-ns]))
 
 
 (defn- event-enricher
@@ -73,15 +57,14 @@
 
   (let [msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
         ;; Pass the event to the router
-        reply (auto-router msg event)]
+        reply (router msg event)]
     (m/create-message! message-ch (:channel-id event) :content reply)))
 
 (defn -main
   "Start the server.
    Note to Zoë and other REPLers, use: `(doto (Thread. -main) (.setDaemon true) (.start))`."
   []
-  (letfn [(check-prefix [data] (re-find #"(?i)^!(MDN|NS)\b" (get data :content "")))
-          ]
+  (letfn [(check-prefix [data] (re-find #"(?i)^!(MDN|NS)\b" (get data :content "")))]
     (let [event-ch     (async/chan 100)
           _conn_ch     (c/connect-bot! token event-ch :intents intents)
           message-ch   (m/start-connection! token)]
