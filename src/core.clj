@@ -26,13 +26,6 @@
       ((:result route) msg event)
       (recur (rest routes) msg event))))
 
-(defn signature-decorator
-  "Wraps a message router with a) how long it took to generate the message b) Muesli's signature"
-  [route msg event]
-  (let [start-time (time/now)
-        result (route)
-        end-time (time/now)])
-  )
 
 (def router
   "Message router, partially applied with all routes."
@@ -47,7 +40,6 @@
             routes/naughty
             routes/lookup-mdn
             routes/lookup-ns]))
-
 
 (defn- event-enricher
   "Turns an event into a map with all relevant data."

@@ -1,7 +1,7 @@
 (ns replies
   (:require
    [clojure.java.io :as io]
-   [clj-time       [core :as t]]
+   [clj-time       [core :as time]]
    [clojure.string :as string]
    [spoiler-channels      :as i]))
 (def md-dir "./data/markdown/")
@@ -9,7 +9,7 @@
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
 (def mdn-url "https://developer.mozilla.org")
 
-(defn sig [start n] (str "\n-# \\#" n " ~" (t/in-millis (t/interval start (t/now))) "ms, @mushroom.botherer if I misbehave."))
+(defn sig [start n] (str "\n-# \\#" n " ~" (time/in-millis (time/interval start (time/now))) "ms, @mushroom.botherer if I misbehave."))
 
 (defn- big-sig [start n]
   (str
@@ -41,7 +41,16 @@
    "grafting"
    "sleeve"])
 
-(defn lcase-&-rm-ns [r] (s/lower-case (-> r (s/replace #"\(\)" "") (s/replace #"(?i)^ns\." "") s/trim)))
+(defn lcase-&-rm-ns [r] (string/lower-case (-> r (string/replace #"\(\)" "") (string/replace #"(?i)^ns\." "") string/trim)))
+
+(defn signature-decorator
+  "Wraps a message router with a) how long it took to generate the message b) Muesli's signature"
+  [msg event f]
+  (let [start-time (time/now)
+        result (f msg event)
+        end-time (time/now)]
+    (str result "\n\n" "~" (time/in-millis (time/interval start-time end-time)) "ms, @mushroom.botherer if I misbehave.")))
+
 
 (def ns-replies
   (reduce
@@ -51,8 +60,8 @@
       (keyword (lcase-&-rm-ns name))
       {:name name
        :sname (lcase-&-rm-ns name)
-       :spoiler? (some #(s/includes? (lcase-&-rm-ns name) %) spoilers)
-       :url (str baseurl (s/lower-case (s/replace name #"\(\)" "")) ".md")}))
+       :spoiler? (some #(string/includes? (lcase-&-rm-ns name) %) spoilers)
+       :url (str baseurl (string/lower-case (string/replace name #"\(\)" "")) ".md")}))
    {}
    (flatten
     (for [f (.list (io/file md-dir))]
@@ -60,18 +69,18 @@
        md-dir
        (str f)
        slurp
-       s/split-lines
+       string/split-lines
        (nth 4)
-       (s/split #" ")
+       (string/split #" ")
        second
-       (s/replace #"\\" ""))))))
+       (string/replace #"\\" ""))))))
 
 (def mdn-replies
   (->>
    "./data/mdn-ref.properties"
    slurp
-   s/split-lines
-   (map (fn [line] (s/split line #"=")))
+   string/split-lines
+   (map (fn [line] (string/split line #"=")))
    (reduce
     (fn [prev [name url]]
       (assoc prev (keyword name)
