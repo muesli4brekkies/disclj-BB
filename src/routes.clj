@@ -57,8 +57,8 @@
 
 (def lookup-mdn
   {:condition (fn [_ event] (re-matches #"(?i)^!mdn.*" (:content event)))
-   :result (fn [msg event] (r/signature-decorator msg event (fn [msg event] (r/fuzzy-search false msg r/mdn-replies))))})
+   :result (fn [msg event] (r/signature-decorator msg event (fn [msg event] (r/fuzzy-search (r/spoil-ok? event) msg r/mdn-replies))))})
 
 (def lookup-ns
   {:condition (fn [_ event] (re-matches #"(?i)^!ns.*" (:content event)))
-   :result (fn [msg event] (r/signature-decorator msg event (fn [msg event] r/fuzzy-search false msg r/ns-replies)))})
+   :result (fn [msg event] (r/signature-decorator msg event (fn [msg event] r/fuzzy-search (r/spoil-ok? event) msg r/ns-replies)))})
