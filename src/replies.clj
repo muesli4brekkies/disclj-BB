@@ -50,7 +50,7 @@
   (let [start-time (time/now)
         result (f msg event)
         end-time (time/now)]
-    (str result "\n\n" "~" (time/in-millis (time/interval start-time end-time)) "ms, @mushroom.botherer if I misbehave.")))
+    (str result "\n-#  ~" (time/in-millis (time/interval start-time end-time)) "ms, @mushroom.botherer if I misbehave.")))
 
 
 (def ns-replies
