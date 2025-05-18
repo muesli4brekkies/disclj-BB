@@ -1,14 +1,16 @@
 (ns replies
   (:require
    [clojure.java.io :as io]
-   [clj-time       [core :as t]]
-   [clojure.string :as s]))
-(def md-dir "/home/debbyadmin/serverfiles/markdown/")
+   [clj-time       [core :as time]]
+   [clojure.string :as string]
+   [spoiler-channels      :as i]
+   [clj-fuzzy.metrics :as fuzzy]))
+(def md-dir "./data/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
 (def mdn-url "https://developer.mozilla.org")
 
-(defn sig [start n] (str "\n-# \\#" n " ~" (t/in-millis (t/interval start (t/now))) "ms, @mushroom.botherer if I misbehave."))
+(defn sig [start n] (str "\n-# \\#" n " ~" (time/in-millis (time/interval start (time/now))) "ms, @mushroom.botherer if I misbehave."))
 
 (defn- big-sig [start n]
   (str
@@ -17,12 +19,6 @@
    "whereby you are legally compelled to immediately share this information with everyone within 100 metres "
    "under penalty of imprisonment or fine. "
    "Click [here](<https://www.youtube.com/watch?v=fC7oUOUEEi4>) for more information."))
-(defn measured-hacknet-response [start n]
-  (str
-   "Hacknet a bad investment early game? You serious? Have you done your mathematics with that thing or not? I guess not. I'm from a heavily mathematical and scientific and scholastic family and lineage since like, Ancient China 5000 years ago? I was forced to do math drills before I could even play anything or whatever. I even had to compete in speed and accuracy with my childhood friend. Of course I won by a mile. Look, calculate the multiplicative aspects of the Hacknets. They'll earn way more than any early servers you can hack because the early game server are so darn poor. hack() is a percentage thingy as far as I can gather. Low server max money, low script income. It doesn't get any simpler to figure out than that. Before you insult my \"mental bandwidth\", I'll have you know that I have full score for all IQ tests I take anytime, anywhere, including those ever increasing difficulty ones that keep going until seemingly forever, and those were so easy and repetitive that I eventually got bored after I passed 300+IQ score and quit out of boredom, even though I originally was aiming for 1000+IQ score. I've always gotten 100% for my Mathematics from kindergarten till end of college/uni and so same programming subjects and logic and abstraction subject. Anyway, enough about me. Just wanted you to know not to judge other people without first getting to know them. It's rude."
-   (big-sig start n)))
-
-(def duk "quack 🦆")
 
 (def tell-off "Doesn't look like anything to me. That's probably a spoiler on this channel. --> <#415207923506216971>")
 
@@ -46,7 +42,16 @@
    "grafting"
    "sleeve"])
 
-(defn lcase-&-rm-ns [r] (s/lower-case (-> r (s/replace #"\(\)" "") (s/replace #"(?i)^ns\." "") s/trim)))
+(defn lcase-&-rm-ns [r] (string/lower-case (-> r (string/replace #"\(\)" "") (string/replace #"(?i)^ns\." "") string/trim)))
+
+(defn signature-decorator
+  "Wraps a message router with a) how long it took to generate the message b) Muesli's signature"
+  [msg event f]
+  (let [start-time (time/now)
+        result (f msg event)
+        end-time (time/now)]
+    (str result "\n-#  ~" (time/in-millis (time/interval start-time end-time)) "ms, @mushroom.botherer if I misbehave.")))
+
 
 (def ns-replies
   (reduce
@@ -56,8 +61,8 @@
       (keyword (lcase-&-rm-ns name))
       {:name name
        :sname (lcase-&-rm-ns name)
-       :spoiler? (some #(s/includes? (lcase-&-rm-ns name) %) spoilers)
-       :url (str baseurl (s/lower-case (s/replace name #"\(\)" "")) ".md")}))
+       :spoiler? (some #(string/includes? (lcase-&-rm-ns name) %) spoilers)
+       :url (str baseurl (string/lower-case (string/replace name #"\(\)" "")) ".md")}))
    {}
    (flatten
     (for [f (.list (io/file md-dir))]
@@ -65,18 +70,18 @@
        md-dir
        (str f)
        slurp
-       s/split-lines
+       string/split-lines
        (nth 4)
-       (s/split #" ")
+       (string/split #" ")
        second
-       (s/replace #"\\" ""))))))
+       (string/replace #"\\" ""))))))
 
 (def mdn-replies
   (->>
-   "/home/debbyadmin/serverfiles/mdn-ref.properties"
+   "./data/mdn-ref.properties"
    slurp
-   s/split-lines
-   (map (fn [line] (s/split line #"=")))
+   string/split-lines
+   (map (fn [line] (string/split line #"=")))
    (reduce
     (fn [prev [name url]]
       (assoc prev (keyword name)
@@ -86,6 +91,22 @@
               :url url}))
     {:mdn {:url mdn-url}})))
 
-(def replies
-  {:ns ns-replies
-   :mdn mdn-replies})
+(defn fuzzy-search
+  "Returns a message trying to fuzzy match the input."
+  [spoil-ok? request replies]
+  (->> [(str "\"" request "\" not found")
+        "The machine spirit wonders if you meant..."
+        (->> replies
+             vals
+             (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (fuzzy/dice % request))))
+             (sort-by #(get % :score ##Inf))
+             reverse
+             (take 5)
+             (map #(str "- " (% :name) ": <" (% :url) ">")))
+        "...? Bye!"]
+       flatten
+       (string/join "\n")))
+
+(defn spoil-ok?
+  [event]
+  (and (not (= (:type event) :mdn)) (some #(= % (:channel-id event)) i/spoiler-channels)))
