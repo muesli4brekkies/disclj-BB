@@ -109,4 +109,4 @@
 
 (defn spoil-ok?
   [event]
-  (and (not (= (:type event) :mdn)) (some #(= % (:channel-id event)) i/spoiler-channels)))
+  (or (= (:type event) :mdn) (some #(= % (:channel-id event)) i/spoiler-channels)))

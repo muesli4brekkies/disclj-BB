@@ -1,3 +1,3 @@
-# A discord bot, for the Bitburner discord server specifically, in clojure.
+## A discord bot, for the Bitburner discord server specifically, in clojure.
 
 Utilising discljord

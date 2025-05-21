@@ -1,10 +1,7 @@
 (ns core
   (:gen-class)
   (:require
-   [replies               :as r]
    [routes :as routes]
-   [spoiler-channels      :as i]
-   [clj-time       [core :as time]]
    [clojure.string        :as string]
    [clojure.core.async    :as async]
    [discljord.connections :as c]
@@ -40,16 +37,13 @@
             routes/persecution
             routes/duck
             routes/naughty
-            routes/lookup-mdn
-            routes/lookup-ns]))
+            routes/lookup]))
 
 (defn- event-enricher
   "Turns an event into a map with all relevant data."
-  [event message-ch n]
-  ;; Ensure bogus requests are ignored early.
-  (when (< 70 (count (:content event))))
-
-  (let [msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
+  [event message-ch]
+  (let [event (assoc event :type (if (string/starts-with? (event :content) "!ns") :ns :mdn))
+        msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") string/lower-case string/trim)
         ;; Pass the event to the router
         reply (router msg event)]
     (m/create-message! message-ch (:channel-id event) :content reply)))
@@ -70,8 +64,8 @@
                  notbot?     (-> data :author :bot not)
                  for-me?     (check-prefix data)
                  ok?         (and msg? notbot? for-me?)]
-             (prn data)
-             (if ok? (do (event-enricher data message-ch n) (inc n)) n))))
+             ;(prn data)
+             (if ok? (do (event-enricher data message-ch) (inc n)) n))))
 
         (finally
           (m/stop-connection! message-ch)
