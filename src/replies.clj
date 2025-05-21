@@ -99,6 +99,7 @@
         (->> replies
              vals
              (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (fuzzy/dice % request))))
+             (filter some?)
              (sort-by #(get % :score ##Inf))
              reverse
              (take 5)
