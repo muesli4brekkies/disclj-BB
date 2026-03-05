@@ -32,6 +32,10 @@
   {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
    :result (fn [_ _] "https://media.discordapp.net/attachments/1369725817038442620/1371201395813781645/image.png")})
 
+(def spam
+  {:condition (fn [msg _] (= msg "spam"))
+   :result (fn [_ _] "https://cdn.discordapp.com/attachments/1015716607626055693/1479199381554200616/original.png")})
+
 (def persecution
   {:condition (fn [msg _]
                 (or

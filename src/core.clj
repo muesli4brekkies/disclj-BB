@@ -36,6 +36,7 @@
             routes/zoe
             routes/persecution
             routes/duck
+            routes/spam
             routes/naughty
             routes/lookup]))
 
