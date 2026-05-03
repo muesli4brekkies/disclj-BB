@@ -102,8 +102,8 @@
              (filter some?)
              (sort-by #(get % :score ##Inf))
              reverse
-             (take 5)
-             (map #(str "- " (% :name) ": <" (% :url) ">")))
+             (take 3)
+             (map #(str "- " (get % :name "") ": <" (get % :url "") ">")))
         "...? Bye!"]
        flatten
        (string/join "\n")))
