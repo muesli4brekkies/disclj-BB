@@ -20,17 +20,38 @@
   {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep")))
    :result (fn [msg _] (string/join " " (-> msg (string/split #"\s") reverse)))})
 
+(def spam
+  {:condition (fn [msg _] (= msg "spam"))
+   :result (fn [_ _] "https://media.tenor.com/_H10DMOzzzsAAAAM/spam.gif")})
+
+(def yuri
+  {:condition (fn [msg _] (= msg "yuri"))
+   :result (fn [_ _] "https://muon.blog/botmedia/yuri.png")})
+
 (def poast-coad
   {:condition (fn [msg _] (= msg "poast coad"))
-   :result (fn [_ _] "https://cdn.discordapp.com/attachments/1287394172894052507/1357485911885222060/image.png")})
+   :result (fn [_ _] "https://muon.blog/botmedia/poastcoad.png")})
 
 (def pspsps
   {:condition (fn [msg _] (re-find #"^ps(ps)+" msg))
-   :result (fn [_ _] "https://cdn.discordapp.com/attachments/1287394172894052507/1365428275496882224/image.png")})
+   :result (fn [_ _] "https://muon.blog/botmedia/psps.png")})
 
 (def zoe
   {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
-   :result (fn [_ _] "https://media.discordapp.net/attachments/1369725817038442620/1371201395813781645/image.png")})
+   :result (fn [_ _] "https://muon.blog/botmedia/zoe.jpg")})
+
+(def code-format
+  {:condition (fn [msg _] (= msg "codeformat"))
+   :result (fn [_ _] "Please format your code so it is readable;
+   \\`\\`\\`javascript
+   like this
+   \\`\\`\\`
+   Those are backticks, not quotes. Found to the left of the 1 key on many keyboards.
+   [.](https://muon.blog/botmedia/codeformat.png)")})
+
+(def long-code
+  {:condition (fn [msg _] (= msg "longcode"))
+   :result (fn [_ _] "https://muon.blog/botmedia/longcode.png")})
 
 (def persecution
   {:condition (fn [msg _]
@@ -53,6 +74,7 @@
   {:condition (fn [_ _] true)
    :result (fn [msg event]
              (let [replies (if (string/starts-with? (:content event) "!ns") r/ns-replies r/mdn-replies)]
+              (prn r/ns-replies)
                (r/signature-decorator
                 msg
                 event

@@ -29,13 +29,17 @@
            ;; Order matters here, as the router will go through this front to back.
            [routes/empty-mdn
             routes/empty-ns
-            routes/too-long
+            routes/code-format
+            routes/long-code
             routes/robot
             routes/poast-coad
             routes/pspsps
+            routes/spam
+            routes/yuri
             routes/zoe
             routes/persecution
             routes/duck
+            routes/too-long
             routes/naughty
             routes/lookup]))
 
@@ -46,7 +50,9 @@
         msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") string/lower-case string/trim)
         ;; Pass the event to the router
         reply (router msg event)]
+    ; alternate-comment these lines for testing purposes
     (m/create-message! message-ch (:channel-id event) :content reply)))
+    ;(m/create-message! message-ch "1357304376330289233" :content reply)))
 
 (defn -main
   "Start the server.
@@ -64,7 +70,6 @@
                  notbot?     (-> data :author :bot not)
                  for-me?     (check-prefix data)
                  ok?         (and msg? notbot? for-me?)]
-             ;(prn data)
              (if ok? (do (event-enricher data message-ch) (inc n)) n))))
 
         (finally
