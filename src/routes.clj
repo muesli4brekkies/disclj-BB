@@ -49,6 +49,18 @@
    Those are backticks, not quotes. Found to the left of the 1 key on many keyboards.
    [.](https://muon.blog/botmedia/codeformat.png)")})
 
+(def spoiler-format
+  {:condition (fn [msg _] (= msg "spoilerformat"))
+   :result (fn [_ _] "Please add spoiler tags to spoily things;
+   \\|\\| your spoiler here \\|\\|
+   Those are pipe symbols, found in the 1 key on Spanish keyboards")})
+
+(def strike-format
+  {:condition (fn [msg _] (= msg "strikeformat"))
+   :result (fn [_ _] "To indicate outdated references/comments and keep context please strike your code;
+   \\~\\~outdated comment\\~\\~"
+   "Those are tildes. Found on the 4 key of many keyboards.")})
+
 (def long-code
   {:condition (fn [msg _] (= msg "longcode"))
    :result (fn [_ _] "https://muon.blog/botmedia/longcode.png")})
