@@ -95,7 +95,7 @@ https://youtube.com/playlist?list=PL4DLlaT_bvDG5y6WSfXU8cQsTsb4o3YnT")})
 
 (def endgame-welcome
   {:condition (fn [msg _] (or (re-matches #"endgame( welcome)?" msg) (= msg "welcome")))
-   :result (fn [_ _] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
+   :result (fn [_ event] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
 Congratulations on beating the tutorial and welcome to endgame!
 
 There are pins in this channel with recommendations for BitNodes to do early (repeating BitNode 1 to get Source File 1.2 is the strongest bonus, but BitNode 2 unlocks a new mechanic, and BitNode 5 unlocks some nice QoL).
