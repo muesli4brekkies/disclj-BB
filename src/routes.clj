@@ -56,7 +56,7 @@ Those are backticks ( \\` ), not quotes ( ' ). Found to the left of the 1 key on
 Those are pipe symbols ( | ). Found above the Enter key on many keyboards, and can be typed via [Shift + \\].")})
 
 (def strike-format
-  {:condition (fn [msg _] (re-matches "strike([ -]?through)? ?format" msg))
+  {:condition (fn [msg _] (re-matches #"strike([ -]?through)? ?format" msg))
    :result (fn [_ _] "To indicate outdated references/comments and avoid confusion, please strikethrough your text;
 \\~\\~outdated comment\\~\\~
 Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and can be accessed via [Shift + \\`].")})
@@ -102,7 +102,7 @@ There are pins in this channel with recommendations for BitNodes to do early (re
 
 You can change your mind and switch BitNodes at any time if you want, too! There's a new program you unlock to do that, called \"b1t_flum3.exe\"
 
-If you have any questions, feel free to ask!" "Run this command in <#415207923506216971> to welcome the new person who has learned The Truth!"))})
+If you have any questions, feel free to ask!" "Run this command in <#415207923506216971> to welcome the new person who has learned The Truth™!"))})
 
 (def naughty
   {:condition (fn [msg event]
