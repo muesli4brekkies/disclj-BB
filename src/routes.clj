@@ -29,7 +29,7 @@
    :result (fn [_ _] "https://muon.blog/botmedia/yuri.png")})
 
 (def poast-coad
-  {:condition (fn [msg _] (= msg "poast coad"))
+  {:condition (fn [msg _] (re-matches #"poast ?coad" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/poastcoad.png")})
 
 (def pspsps
@@ -41,28 +41,28 @@
    :result (fn [_ _] "https://muon.blog/botmedia/zoe.jpg")})
 
 (def code-format
-  {:condition (fn [msg _] (= msg "codeformat"))
+  {:condition (fn [msg _] (re-matches #"code ?format" msg))
    :result (fn [_ _] "Please format your code so it is readable;
-   \\`\\`\\`javascript
-   like this
-   \\`\\`\\`
-   Those are backticks, not quotes. Found to the left of the 1 key on many keyboards.
-   [.](https://muon.blog/botmedia/codeformat.png)")})
+\\`\\`\\`js
+like this
+\\`\\`\\`
+Those are backticks ( \\` ), not quotes ( ' ). Found to the left of the 1 key on many keyboards.
+[​](https://muon.blog/botmedia/codeformat.png)")})
 
 (def spoiler-format
-  {:condition (fn [msg _] (= msg "spoilerformat"))
+  {:condition (fn [msg _] (re-matches #"spoiler ?format" msg))
    :result (fn [_ _] "Please add spoiler tags to spoily things;
-   \\|\\| your spoiler here \\|\\|
-   Those are pipe symbols, found in the 1 key on Spanish keyboards")})
+\\|\\| your spoiler here \\|\\|
+Those are pipe symbols ( | ). Found above the Enter key on many keyboards, and can be typed via [Shift + \\].")})
 
 (def strike-format
-  {:condition (fn [msg _] (= msg "strikeformat"))
-   :result (fn [_ _] "To indicate outdated references/comments and keep context please strike your code;
-   \\~\\~outdated comment\\~\\~"
-   "Those are tildes. Found on the 4 key of many keyboards.")})
+  {:condition (fn [msg _] (re-matches "strike([ -]?through)? ?format" msg))
+   :result (fn [_ _] "To indicate outdated references/comments and avoid confusion, please strikethrough your text;
+\\~\\~outdated comment\\~\\~"
+"Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and can be accessed via [Shift + \\`].")})
 
 (def long-code
-  {:condition (fn [msg _] (= msg "longcode"))
+  {:condition (fn [msg _] (re-matches #"long ?code" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/longcode.png")})
 
 (def persecution
@@ -76,6 +76,33 @@
 (def duck
   {:condition (fn [msg _] (or (string/includes? msg "quack") (string/includes? msg "duck")))
    :result (fn [_ _] "quack 🦆")})
+
+(def ipvgo
+  {:condition (fn [msg _] (= msg "ipvgo"))
+  :result (fn [_ _] "-# Originally written by FicocelliGuy:
+Your goal is to build \"walls\" of touching pieces that surround empty space. If you make those connected walls surround two different \"rooms\", it is much harder or impossible for them to be captured.
+
+At the same time you want to take away empty space from the areas your opponent is building in, with careful use of your pieces.
+
+To think about it another way: You are trying to surround gardens with walls to protect them - but you can't grow anything if the open space for gardening gets completely paved over.
+
+If you make a group of touching stones that surrounds two different empty spaces, they can't ever be taken, unless you pave over one of the spaces with your pieces.
+
+For example: If you make a figure 8 or another continuous shape that surrounds more than one empty space, it is immortal - the opponent can't capture it anymore, unless you wall over one of those spaces yourself. (This is because the opponent can only play one move at a time and can't play moves that would commit suicide)
+
+If you are a visual learner, you can watch this playlist on the board game Go (which is what IPvGO is based upon) to learn the basics:
+https://youtube.com/playlist?list=PL4DLlaT_bvDG5y6WSfXU8cQsTsb4o3YnT")})
+
+(def endgame-welcome
+  {:condition (fn [msg _] (or (re-matches #"endgame( welcome)?" msg) (= msg "welcome")))
+   :result (fn [_ _] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
+Congratulations on beating the tutorial and welcome to endgame!
+
+There are pins in this channel with recommendations for BitNodes to do early (repeating BitNode 1 to get Source File 1.2 is the strongest bonus, but BitNode 2 unlocks a new mechanic, and BitNode 5 unlocks some nice QoL).
+
+You can change your mind and switch BitNodes at any time if you want, too! There's a new program you unlock to do that, called \"b1t_flum3.exe\"
+
+If you have any questions, feel free to ask!" "Run this command in <#415207923506216971> to welcome the new person who has learned The Truth!"))})
 
 (def naughty
   {:condition (fn [msg event]
