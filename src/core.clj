@@ -30,7 +30,11 @@
            [routes/empty-mdn
             routes/empty-ns
             routes/code-format
+            routes/spoiler-format
+            routes/strike-format
             routes/long-code
+            routes/ipvgo
+            routes/endgame-welcome
             routes/robot
             routes/poast-coad
             routes/pspsps

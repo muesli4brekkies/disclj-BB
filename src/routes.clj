@@ -17,7 +17,7 @@
    :result (fn [_ _]  "Nuh uh, that request is too long.")})
 
 (def robot
-  {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep")))
+  {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep") (= msg "beep boop") (= msg "boop beep")))
    :result (fn [msg _] (string/join " " (-> msg (string/split #"\s") reverse)))})
 
 (def spam
@@ -58,8 +58,8 @@ Those are pipe symbols ( | ). Found above the Enter key on many keyboards, and c
 (def strike-format
   {:condition (fn [msg _] (re-matches "strike([ -]?through)? ?format" msg))
    :result (fn [_ _] "To indicate outdated references/comments and avoid confusion, please strikethrough your text;
-\\~\\~outdated comment\\~\\~"
-"Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and can be accessed via [Shift + \\`].")})
+\\~\\~outdated comment\\~\\~
+Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and can be accessed via [Shift + \\`].")})
 
 (def long-code
   {:condition (fn [msg _] (re-matches #"long ?code" msg))
@@ -94,7 +94,7 @@ If you are a visual learner, you can watch this playlist on the board game Go (w
 https://youtube.com/playlist?list=PL4DLlaT_bvDG5y6WSfXU8cQsTsb4o3YnT")})
 
 (def endgame-welcome
-  {:condition (fn [msg _] (or (re-matches #"endgame( welcome)?" msg) (= msg "welcome")))
+  {:condition (fn [msg _] (or (re-matches #"endgame( welcome)?" msg) (= msg "welcome") (= msg "welcome to endgame")))
    :result (fn [_ event] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
 Congratulations on beating the tutorial and welcome to endgame!
 
