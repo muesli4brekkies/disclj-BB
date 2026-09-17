@@ -17,7 +17,7 @@
    :result (fn [_ _]  "Nuh uh, that request is too long.")})
 
 (def robot
-  {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep")))
+  {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep") (= msg "beep boop") (= msg "boop beep")))
    :result (fn [msg _] (string/join " " (-> msg (string/split #"\s") reverse)))})
 
 (def spam
@@ -29,7 +29,7 @@
    :result (fn [_ _] "https://muon.blog/botmedia/yuri.png")})
 
 (def poast-coad
-  {:condition (fn [msg _] (= msg "poast coad"))
+  {:condition (fn [msg _] (re-matches #"poast ?coad" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/poastcoad.png")})
 
 (def pspsps
@@ -41,33 +41,48 @@
    :result (fn [_ _] "https://muon.blog/botmedia/conglats.gif")})
 
 (def zoe
-  {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
+  {:condition (fn [msg _] (re-matches #"zo[eë]" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/zoe.jpg")})
 
 (def code-format
-  {:condition (fn [msg _] (= msg "codeformat"))
+  {:condition (fn [msg _] (re-matches #"code ?format" msg))
    :result (fn [_ _] "Please format your code so it is readable;
-   \\`\\`\\`javascript
-   like this
-   \\`\\`\\`
-   Those are backticks, not quotes. Found to the left of the 1 key on many keyboards.
-   [.](https://muon.blog/botmedia/codeformat.png)")})
+\\`\\`\\`js
+like this
+\\`\\`\\`
+Those are backticks ( \\` ), not quotes ( ' ). Found to the left of the 1 key on many keyboards.
+[.](https://muon.blog/botmedia/codeformat.png)")})
 
 (def spoiler-format
-  {:condition (fn [msg _] (= msg "spoilerformat"))
+  {:condition (fn [msg _] (re-matches #"spoiler ?format" msg))
    :result (fn [_ _] "Please add spoiler tags to spoily things;
-   \\|\\| your spoiler here \\|\\|
-   Those are pipe symbols")})
+\\|\\| your spoiler here \\|\\|
+Those are pipe symbols ( | ). Found above the Enter key on many keyboards, and can be typed via [Shift + \\].")})
 
 (def strike-format
-  {:condition (fn [msg _] (= msg "strikeformat"))
-   :result (fn [_ _] "To indicate outdated references/comments and keep context please strike your code;
-   \\~\\~outdated comment\\~\\~
-   Those are tildes.")})
+  {:condition (fn [msg _] (re-matches #"strike([ -]?through)? ?format" msg))
+   :result (fn [_ _] "To indicate outdated references/comments and avoid confusion, please strikethrough your text;
+\\~\\~outdated comment\\~\\~
+Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and can be accessed via [Shift + \\`].")})
 
 (def long-code
-  {:condition (fn [msg _] (= msg "longcode"))
+  {:condition (fn [msg _] (re-matches #"long ?code" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/longcode.png")})
+
+(def endgame-welcome
+  {:condition (fn [msg _] (or (re-matches #"endgame( ?welcome)?" msg) (= msg "welcome") (= msg "welcome to endgame")))
+   :result (fn [_ event] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
+Congratulations on beating the tutorial and welcome to endgame!
+
+There are pins in this channel with recommendations for BitNodes to do early (repeating BitNode 1 to get Source File 1.2 is the strongest bonus, but BitNode 2 unlocks a new mechanic, and BitNode 5 unlocks some nice QoL).
+
+You can change your mind and switch BitNodes at any time if you want, too! There's a new program you unlock to do that, called \"b1t_flum3.exe\"
+
+If you have any questions, feel free to ask!" "To <#415207923506216971> with you!"))})
+
+(def check-pins
+  {:condition (fn [msg _] (rematches #"(check ?(the ?)?)?pins?" msg))
+   :result (fn [_ _] "📌 Check the pins!!")})
 
 (def persecution
   {:condition (fn [msg _]

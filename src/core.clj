@@ -33,6 +33,8 @@
             routes/strike-format
             routes/spoiler-format
             routes/long-code
+            routes/endgame-welcome
+            routes/check-pins
             routes/robot
             routes/poast-coad
             routes/pspsps
