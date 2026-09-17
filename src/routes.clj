@@ -37,7 +37,7 @@
    :result (fn [_ _] "https://muon.blog/botmedia/psps.png")})
 
 (def zoe
-  {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
+  {:condition (fn [msg _] (re-matches #"zo[eë]" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/zoe.jpg")})
 
 (def code-format
@@ -65,6 +65,21 @@ Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and ca
   {:condition (fn [msg _] (re-matches #"long ?code" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/longcode.png")})
 
+(def endgame-welcome
+  {:condition (fn [msg _] (or (re-matches #"endgame( ?welcome)?" msg) (= msg "welcome") (= msg "welcome to endgame")))
+   :result (fn [_ event] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
+Congratulations on beating the tutorial and welcome to endgame!
+
+There are pins in this channel with recommendations for BitNodes to do early (repeating BitNode 1 to get Source File 1.2 is the strongest bonus, but BitNode 2 unlocks a new mechanic, and BitNode 5 unlocks some nice QoL).
+
+You can change your mind and switch BitNodes at any time if you want, too! There's a new program you unlock to do that, called \"b1t_flum3.exe\"
+
+If you have any questions, feel free to ask!" "To <#415207923506216971> with you!"))})
+
+(def check-pins
+  {:condition (fn [msg _] (rematches #"(check ?(the ?)?)?pins?" msg))
+   :result (fn [_ _] "📌 Check the pins!!")})
+
 (def persecution
   {:condition (fn [msg _]
                 (or
@@ -76,33 +91,6 @@ Those are tildes ( ~ ). Found to the left of the 1 key on many keyboards, and ca
 (def duck
   {:condition (fn [msg _] (or (string/includes? msg "quack") (string/includes? msg "duck")))
    :result (fn [_ _] "quack 🦆")})
-
-(def ipvgo
-  {:condition (fn [msg _] (= msg "ipvgo"))
-  :result (fn [_ _] "-# Originally written by FicocelliGuy:
-Your goal is to build \"walls\" of touching pieces that surround empty space. If you make those connected walls surround two different \"rooms\", it is much harder or impossible for them to be captured.
-
-At the same time you want to take away empty space from the areas your opponent is building in, with careful use of your pieces.
-
-To think about it another way: You are trying to surround gardens with walls to protect them - but you can't grow anything if the open space for gardening gets completely paved over.
-
-If you make a group of touching stones that surrounds two different empty spaces, they can't ever be taken, unless you pave over one of the spaces with your pieces.
-
-For example: If you make a figure 8 or another continuous shape that surrounds more than one empty space, it is immortal - the opponent can't capture it anymore, unless you wall over one of those spaces yourself. (This is because the opponent can only play one move at a time and can't play moves that would commit suicide)
-
-If you are a visual learner, you can watch this playlist on the board game Go (which is what IPvGO is based upon) to learn the basics:
-https://youtube.com/playlist?list=PL4DLlaT_bvDG5y6WSfXU8cQsTsb4o3YnT")})
-
-(def endgame-welcome
-  {:condition (fn [msg _] (or (re-matches #"endgame( welcome)?" msg) (= msg "welcome") (= msg "welcome to endgame")))
-   :result (fn [_ event] (if (r/spoil-ok? event) "-# Originally written by FicocelliGuy:
-Congratulations on beating the tutorial and welcome to endgame!
-
-There are pins in this channel with recommendations for BitNodes to do early (repeating BitNode 1 to get Source File 1.2 is the strongest bonus, but BitNode 2 unlocks a new mechanic, and BitNode 5 unlocks some nice QoL).
-
-You can change your mind and switch BitNodes at any time if you want, too! There's a new program you unlock to do that, called \"b1t_flum3.exe\"
-
-If you have any questions, feel free to ask!" "Run this command in <#415207923506216971> to welcome the new person who has learned The Truth™!"))})
 
 (def naughty
   {:condition (fn [msg event]
