@@ -35,13 +35,10 @@
 (def pspsps
   {:condition (fn [msg _] (re-find #"^ps(ps)+" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/psps.png")})
-<<<<<<< HEAD
 
 (def conglats
   {:condition (fn [msg _] (re-find #"^cong(r|l)at(s|u(r|l)ations)?$" msg))
    :result (fn [_ _] "https://muon.blog/botmedia/conglats.gif")})
-=======
->>>>>>> refs/remotes/origin/main
 
 (def zoe
   {:condition (fn [msg _] (or (= msg "zoe") (= msg "zoë")))
@@ -60,22 +57,13 @@
   {:condition (fn [msg _] (= msg "spoilerformat"))
    :result (fn [_ _] "Please add spoiler tags to spoily things;
    \\|\\| your spoiler here \\|\\|
-<<<<<<< HEAD
    Those are pipe symbols")})
-=======
-   Those are pipe symbols, found in the 1 key on Spanish keyboards")})
->>>>>>> refs/remotes/origin/main
 
 (def strike-format
   {:condition (fn [msg _] (= msg "strikeformat"))
    :result (fn [_ _] "To indicate outdated references/comments and keep context please strike your code;
-<<<<<<< HEAD
    \\~\\~outdated comment\\~\\~
    Those are tildes.")})
-=======
-   \\~\\~outdated comment\\~\\~"
-   "Those are tildes. Found on the 4 key of many keyboards.")})
->>>>>>> refs/remotes/origin/main
 
 (def long-code
   {:condition (fn [msg _] (= msg "longcode"))
@@ -102,19 +90,11 @@
   {:condition (fn [_ _] true)
    :result (fn [msg event]
              (let [replies (if (string/starts-with? (:content event) "!ns") r/ns-replies r/mdn-replies)]
-<<<<<<< HEAD
               ;(prn r/ns-replies)
-=======
-              (prn r/ns-replies)
->>>>>>> refs/remotes/origin/main
                (r/signature-decorator
                 msg
                 event
                 (fn [msg event]
                   (if-let [match (-> msg keyword replies :url)]
                     (str "<" match ">")
-<<<<<<< HEAD
                     (r/fuzzy-search (r/spoil-ok? event) msg replies))))))})
-=======
-                    (r/fuzzy-search (r/spoil-ok? event) msg replies))))))})
->>>>>>> refs/remotes/origin/main

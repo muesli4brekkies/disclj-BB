@@ -110,8 +110,4 @@
 
 (defn spoil-ok?
   [event]
-<<<<<<< HEAD
   (or (= (:type event) :mdn) (some #(= % (:channel-id event)) i/spoiler-channels)))
-=======
-  (or (= (:type event) :mdn) (some #(= % (:channel-id event)) i/spoiler-channels)))
->>>>>>> refs/remotes/origin/main
