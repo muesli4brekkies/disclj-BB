@@ -1,10 +1,7 @@
 (ns core
   (:gen-class)
   (:require
-   [replies               :as r]
    [routes :as routes]
-   [spoiler-channels      :as i]
-   [clj-time       [core :as time]]
    [clojure.string        :as string]
    [clojure.core.async    :as async]
    [discljord.connections :as c]
@@ -32,27 +29,33 @@
            ;; Order matters here, as the router will go through this front to back.
            [routes/empty-mdn
             routes/empty-ns
-            routes/too-long
+            routes/code-format
+            routes/strike-format
+            routes/spoiler-format
+            routes/long-code
             routes/robot
             routes/poast-coad
             routes/pspsps
+            routes/conglats
+            routes/spam
+            routes/yuri
             routes/zoe
             routes/persecution
             routes/duck
+            routes/too-long
             routes/naughty
-            routes/lookup-mdn
-            routes/lookup-ns]))
+            routes/lookup]))
 
 (defn- event-enricher
   "Turns an event into a map with all relevant data."
-  [event message-ch n]
-  ;; Ensure bogus requests are ignored early.
-  (when (< 70 (count (:content event))))
-
-  (let [msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") r/lcase-&-rm-ns)
+  [event message-ch]
+  (let [event (assoc event :type (if (string/starts-with? (event :content) "!ns") :ns :mdn))
+        msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") string/lower-case string/trim)
         ;; Pass the event to the router
         reply (router msg event)]
+    ; alternate-comment these lines for testing purposes
     (m/create-message! message-ch (:channel-id event) :content reply)))
+    ;(m/create-message! message-ch "1357304376330289233" :content reply)))
 
 (defn -main
   "Start the server.
@@ -70,8 +73,7 @@
                  notbot?     (-> data :author :bot not)
                  for-me?     (check-prefix data)
                  ok?         (and msg? notbot? for-me?)]
-             (prn data)
-             (if ok? (do (event-enricher data message-ch n) (inc n)) n))))
+             (if ok? (do (event-enricher data message-ch) (inc n)) n))))
 
         (finally
           (m/stop-connection! message-ch)

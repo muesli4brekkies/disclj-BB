@@ -99,14 +99,15 @@
         (->> replies
              vals
              (map #(when (or spoil-ok? (not (% :spoiler?))) (assoc % :score (fuzzy/dice % request))))
+             (filter some?)
              (sort-by #(get % :score ##Inf))
              reverse
-             (take 5)
-             (map #(str "- " (% :name) ": <" (% :url) ">")))
+             (take 3)
+             (map #(str "- " (get % :name "") ": <" (get % :url "") ">")))
         "...? Bye!"]
        flatten
        (string/join "\n")))
 
 (defn spoil-ok?
   [event]
-  (and (not (= (:type event) :mdn)) (some #(= % (:channel-id event)) i/spoiler-channels)))
+  (or (= (:type event) :mdn) (some #(= % (:channel-id event)) i/spoiler-channels)))
