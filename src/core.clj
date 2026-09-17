@@ -30,13 +30,19 @@
            [routes/empty-mdn
             routes/empty-ns
             routes/code-format
+<<<<<<< HEAD
             routes/strike-format
             routes/spoiler-format
+=======
+>>>>>>> refs/remotes/origin/main
             routes/long-code
             routes/robot
             routes/poast-coad
             routes/pspsps
+<<<<<<< HEAD
             routes/conglats
+=======
+>>>>>>> refs/remotes/origin/main
             routes/spam
             routes/yuri
             routes/zoe
