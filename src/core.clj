@@ -4,6 +4,7 @@
    [routes :as routes]
    [clojure.string        :as string]
    [clojure.core.async    :as async]
+   [clojure.java.io :as io]
    [discljord.connections :as c]
    [discljord.messaging   :as m]))
 
@@ -33,6 +34,9 @@
             routes/strike-format
             routes/spoiler-format
             routes/long-code
+            routes/static-ram-parsing
+            routes/endgame-welcome
+            routes/check-pins
             routes/robot
             routes/poast-coad
             routes/pspsps
@@ -46,6 +50,11 @@
             routes/naughty
             routes/lookup]))
 
+(defn- create-filesvector
+  "Takes a vector of filenames and turns it into a vector of java.io.File objects."
+  [filenames]
+  (mapv io/file filenames))
+
 (defn- event-enricher
   "Turns an event into a map with all relevant data."
   [event message-ch]
@@ -53,8 +62,13 @@
         msg (-> event :content (string/replace #"(?i)^!(MDN|NS)\b" "") string/lower-case string/trim)
         ;; Pass the event to the router
         reply (router msg event)]
+        ;reply is a map with :content and :files keys, :content takes a string while :files takes a vector of filenames,
+        ;with the format of "files/<filename>", the file(s) must be placed inside the files folder of the project.
+        ;The file paths are with respect to the location of the project.clj file
     ; alternate-comment these lines for testing purposes
-    (m/create-message! message-ch (:channel-id event) :content reply)))
+    (m/create-message! message-ch (:channel-id event)
+                                   :content (:content reply)
+                                   :attachments (create-filesvector (:files reply)))))
     ;(m/create-message! message-ch "1357304376330289233" :content reply)))
 
 (defn -main
