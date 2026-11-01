@@ -1,1 +1,6 @@
-*.key
+*.key.calva/
+.clj-kondo/
+.joyride/
+.lsp/
+target/
+.calva/

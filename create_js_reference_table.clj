@@ -19,10 +19,14 @@
 (defn create-properties []
   (let [files (read-mdn-repository)]
     (->> files
-         (filter #(s/starts-with? % "content-main/files/en-us/web/javascript/reference"))
+         (filter #(or
+                   (s/starts-with? % "content-main/files/en-us/web/api")
+                   (s/starts-with? % "content-main/files/en-us/web/javascript/reference")))
          (filter #(s/ends-with? % "/index.md"))
          (map #(vector
-                (get (re-find #"^.*?javascript\/reference\/(.*?)\/index.md$" %) 1 "")
+                (get (or
+                      (re-find #"^.*?web\/api\/(.*?)\/index.md$" %)
+                      (re-find #"^.*?javascript\/reference\/(.*?)\/index.md$" %)) 1 "")
                 (-> %
                     (s/replace #"^.*?\/en-us" "https://developer.mozilla.org/en-US/docs")
                     (s/replace #"\/index\.md" ""))))
@@ -33,4 +37,4 @@
          (filter #(not (= (first %) "")))
          (reduce #(str %1 (first %2) "=" (second %2) \newline) ""))))
 
-(spit "mdn-ref.properties" (create-properties))
+(spit "data/mdn-ref.properties" (create-properties))

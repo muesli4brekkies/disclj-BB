@@ -1,10 +1,7 @@
 (ns core
   (:gen-class)
   (:require
-   [replies               :as r]
    [routes :as routes]
-   [spoiler-channels      :as i]
-   [clj-time       [core :as time]]
    [clojure.string        :as string]
    [clojure.core.async    :as async]
    [discljord.connections :as connection]
