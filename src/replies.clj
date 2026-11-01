@@ -4,7 +4,8 @@
    [clj-time       [core :as time]]
    [clojure.string :as string]
    [spoiler-channels      :as i]
-   [clj-fuzzy.metrics :as fuzzy]))
+   [clj-fuzzy.metrics :as fuzzy]
+   [clojure.java.io :as io]))
 (def md-dir "./data/markdown/")
 
 (def baseurl "https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.")
@@ -111,3 +112,7 @@
 (defn spoil-ok?
   [event]
   (or (= (:type event) :mdn) (some #(= % (:channel-id event)) i/spoiler-channels)))
+
+(def project-version-info (with-open [pom-properties-reader (io/reader (io/resource "META-INF/maven/disclj/disclj/pom.properties"))]
+                            (doto (java.util.Properties.)
+                              (.load pom-properties-reader))))

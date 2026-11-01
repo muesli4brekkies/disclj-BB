@@ -4,6 +4,8 @@
    [replies               :as r]
    [clojure.string :as string]))
 
+;; Commented commands are covered by new code.
+
 (def empty-mdn
   {:condition (fn [msg event] (and (= "" msg) (re-matches #"(?i)^!mdn.*" (:content event))))
    :result (fn [_ _]  "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting")})
@@ -12,9 +14,14 @@
   {:condition (fn [msg event] (and (= "" msg) (re-matches #"(?i)^!ns.*" (:content event))))
    :result (fn [_ _]  "<https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.md>")})
 
-(def too-long
-  {:condition (fn [msg _] (< 70 (count msg)))
-   :result (fn [_ _]  "Nuh uh, that request is too long.")})
+;; (def too-long
+;;   {:condition (fn [msg _] (< 70 (count msg)))
+;;    :result (fn [msg _]  "Nuh uh, that request is too long.")})
+
+(def version
+  {:condition (fn [msg _] (= msg "version"))
+   :result (fn [msg _] (str "Bot version: " (get replies/project-version-info "version")
+                            "\nLast Git commit: " (get replies/project-version-info "revision")))})
 
 (def robot
   {:condition (fn [msg _] (or (= msg "bleep bloop") (= msg "bloop bleep")))
